@@ -1,160 +1,67 @@
-public class LinkedList {
+import java.util.ListIterator;
+import java.util.NoSuchElementException;
+
+public class LinkedList implements ListIterator<String>{
+	Node head = null;
+	Node tail = null;
+	int size = 0;
+	Node cursor = null;
+	Node lastAccessed = null;
+	int index = 0;
+	boolean lastCallWasNext = false;
+	boolean lastCallWasPrevious = false;
+	boolean lastCallWasAdd = false;
+	boolean lastCallWasRemove = false;
 	
-	private Node head;
-	
-	private int size = 0;
-	
-	public void LinkedList() {
+	public void addAtEnd(String element) {
+		Node newNode = new Node(element, null, null);  
+		if(head == null) {   
+			head = tail = cursor = newNode;
+			cursor.previous = lastAccessed;
+			head.previous = null;  
+			tail.next = null;  
+		}  
+		else {  
+			tail.next = newNode;  
+			newNode.previous = tail;  
+			tail = newNode;  
+		}  
+		size++;
 	}
-		
-	public void add(String element) 
-	{
-		this.add(this.size, element);
-	}
-	
-	public void add(int index, String element) 
-	{
-		Node current = null;
+
+	public void add(int index, String element) {
+		if (index < 0|| index > size) {
+			throw new IndexOutOfBoundsException();
+		}
 		Node newNode = new Node(element, null, null);
-
-		if(head == null) {
-			//List is empty... as long as index given is zero, just add
-			if (index == 0) {
-				head = newNode;				
-			}
-			else {
-				throw new IndexOutOfBoundsException();				
-			}
+		if (head == null) {
+			head = newNode;
+			tail = newNode;
+		}
+		else if (index == 0) {
+			newNode.next = head;
+			head.previous = newNode;
+			head = newNode;
+		}
+		else if (index == size) {
+			newNode.previous = tail;
+			tail.next = newNode;
+			tail = newNode;
 		}
 		else {
-			current = getNode(index -1);
-			if (index > size || index < 0) {
-				throw new IndexOutOfBoundsException();				
+			Node nodeRef = head;
+			for (int i = 1; i < index; i++) {
+				nodeRef = nodeRef.next;
 			}
-			
-			else {
-				if (index == 0) {
-					current = getNode(index);
-					current.previous = newNode;
-					newNode.next = current;
-					head = newNode;
-				}
+			newNode.next = nodeRef.next;
+			nodeRef.next = newNode;
+			newNode.previous = nodeRef;
+			newNode.next.previous = newNode;
+		}
+		size++;
+	}
 
-				else { 
-					//insert new node to previous of current
-					Node previousNode = current.previous;
-					Node nextNode = current.next;
-					if (nextNode == null) {
-						newNode.previous = current;
-						current.next = newNode;
-					}
-
-					else if (previousNode == null) {
-						//only need to assign two pointers
-						head = newNode;
-						newNode.next = current;
-						current.previous = newNode;
-					}
-
-					else {
-						//assign four pointers
-						current.previous = newNode;
-						previousNode.next = newNode;
-						newNode.previous = previousNode;
-						newNode.next = current;
-					}
-				}
-			}
-
-
-		}
-			this.size++;
-	}
-	
-	public void clear() 
-	{
-		
-		Node temp = new Node(null, null, null);
-		
-		while(this.head != null) {
-		    temp = this.head;
-		    this.head = this.head.next;
-		    temp = null;
-		  }
-		
-		size = 0;
-	}
-	
-	private Node getNode(int index) {
-		Node current = this.head;
-		
-		if (index >= 0 && index <= this.size) {
-			int i = 0;
-			
-			while( current != null && i++ < index) {
-				current = current.next;
-			}
-		}
-		else {
-			current = null;
-		}
-
-		return current;
-	}
-	
-	public String get(int index) 
-	{
-		Node current = this.getNode(index);
-		
-		if (current != null) {
-			return current.value;
-		}
-		else {
-			return "";
-		}
-	}
-	
-	public void remove(int index) 
-	{
-		Node current = getNode(index);
-		Node prev = current.previous;
-		Node next = current.next;
-		
-		if (current.next == null && current.previous == null) {
-			current = null;
-		}
-		
-		else if (current.next == null) {
-			current = null;
-			prev.next = null;
-		}
-		
-		else if (current.previous == null) {
-			current = null;
-			next.previous = null;
-			head = next;
-		}
-		
-		else {
-			current = null;
-			prev.next = next;
-			next.previous = prev;
-		}
-		this.size--;
-	}
-	
-	public void set(int index, String element) 
-	{
-		Node current = getNode(index);
-		current.value = element;
-	}
-	
-	public int size() {
-		return this.size;
-	}
-	
-	public String toString() 
-	{
+	public String toString() {
 		String string = "[";
 		for (Node node = this.head; node != null; node = node.next) {
 			if (node.next == null) {
@@ -168,4 +75,211 @@ public class LinkedList {
 		return string;
 	}
 
+
+	public int size() {
+		return size;
+
+	}
+	private Node getNode(int index) {
+		Node current = this.head;
+
+		if (index >= 0 && index <= this.size) {
+			int i = 0;
+
+			while( current != null && i++ < index) {
+				current = current.next;
+			}
+		}
+		else {
+			current = null;
+		}
+
+		return current;
+	}
+
+	public String get(int index) {
+		if (index < 0 || index >= size) {
+			throw new IndexOutOfBoundsException();
+		} else {
+			Node current = head;
+			for (int i = 0; i < index; i++) {
+				current = current.next;
+			}
+			return current.value;
+		}
+	}
+	public void set(int index, String element) {
+		Node current = getNode(index);
+		current.value = element;
+	}
+
+	public void remove(int index) {
+		Node current = getNode(index);
+		Node prev = current.previous;
+		Node next = current.next;
+
+		if (current.next == null && current.previous == null) {
+			current = null;
+		}
+
+		else if (current.next == null) {
+			current = null;
+			prev.next = null;
+		}
+
+		else if (current.previous == null) {
+			current = null;
+			next.previous = null;
+			head = next;
+		}
+
+		else {
+			current = null;
+			prev.next = next;
+			next.previous = prev;
+		}
+		this.size--;
+	}
+
+	public void clear() {
+		head = null;
+		size = 0;
+	}
+
+
+	@Override
+	public boolean hasNext() {
+		if (cursor != null) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	@Override
+	public String next() {
+		String value = "";
+		if (!hasNext()) {
+			throw new NoSuchElementException();
+		}
+		else {
+			lastAccessed = cursor;
+			value = cursor.value;
+			index++;
+		}
+		lastCallWasNext = true;
+		lastCallWasPrevious = false;
+		lastCallWasAdd = false;
+		lastCallWasRemove = false;
+		cursor = cursor.next;
+		return value;
+	}
+
+	@Override
+	public boolean hasPrevious() {
+		if (lastAccessed != null) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	@Override
+	public String previous() {
+		String value = "";
+		if (!hasPrevious()) {
+			throw new NoSuchElementException();
+		}
+		else if (lastCallWasAdd == true) {
+			index--;
+			lastCallWasNext = false;
+			lastCallWasPrevious = true;
+			lastCallWasAdd = false;
+			lastCallWasRemove = false;
+			return lastAccessed.next.value;
+		}
+		else {
+			value = lastAccessed.value;
+			index --;
+			cursor = lastAccessed;
+			lastAccessed = cursor.previous;
+			lastCallWasNext = false;
+			lastCallWasPrevious = true;
+			lastCallWasAdd = false;
+			lastCallWasRemove = false;
+			return value;
+		}
+	}
+
+	@Override
+	public int nextIndex() {
+		return index;
+	}
+
+	@Override
+	public int previousIndex() {
+		return index - 1;
+	}
+
+	@Override
+	public void remove() {
+		if (lastAccessed == null) throw new IllegalStateException();
+		Node x = lastAccessed.previous;
+		Node y = lastAccessed.next;
+		x.next = y;
+		y.previous = x;
+		size--;
+		if (cursor == lastAccessed)
+			cursor = y;
+		else {
+			index--;
+		}
+		lastAccessed = null;
+		lastCallWasNext = false;
+		lastCallWasPrevious = false;
+		lastCallWasAdd = false;
+		lastCallWasRemove = true;
+	}
+
+	@Override
+	public void set(String e) {
+		if (lastCallWasAdd == true || lastCallWasRemove == true) {
+			throw new IllegalStateException();
+		}
+		else if (lastCallWasNext == true) {
+			set(previousIndex(), e);
+			lastCallWasNext = false;
+			lastCallWasPrevious = false;
+			lastCallWasAdd = false;
+			lastCallWasRemove = false;
+		}
+		else if (lastCallWasNext == false) {
+			set(nextIndex(), e);
+			lastCallWasNext = false;
+			lastCallWasPrevious = false;
+			lastCallWasAdd = false;
+			lastCallWasRemove = false;
+		}
+	}
+	@Override
+	public void add(String e) {
+		if (lastCallWasNext == true && lastCallWasPrevious == false) {
+			add(index, e);
+			index++;
+		}
+		else if (lastCallWasPrevious == true && lastCallWasNext == false) {
+			add(index, e);
+			index++;
+		}
+		else {
+			addAtEnd(e);
+		}
+		lastCallWasAdd = true;
+		}
+
+public ListIterator listIterator() {
+	return this;
+}
 }
